@@ -1,0 +1,25 @@
+{
+  "products":[
+    {
+      "id":1,
+      "available": true,
+      "company":"SPACEX",
+      "provider":"STARLINK",
+      "type":"SATELLITE"
+    },
+    {
+      "id":2,
+      "available": false,
+      "company":"ONEWEB",
+      "provider":"ONEWEB",
+      "type":"SATELLITE"
+    },
+    {
+      "id":3,
+      "available": false,
+      "company":"AMAZON",
+      "provider":"KUIPER",
+      "type":"SATELLITE"
+    }
+  ]
+}

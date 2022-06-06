@@ -1,0 +1,42 @@
+services:
+  mongodb:
+    container_name: maoudia-mongodb
+    image: mongo:5.0.8
+    environment:
+      - MONGO_INITDB_DATABASE=test
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    networks:
+      - mongodb-network
+    ports:
+      - 15015:27017
+    volumes:
+      - ./data/mongodb:/data/mongodb
+
+  mongo-express:
+    container_name: maoudia-mongo-express
+    image: mongo-express:0.54.0
+    depends_on:
+      - mongodb
+    networks:
+      - mongodb-network
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=maoudia-mongodb
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=password
+    ports:
+      - 1515:8081
+    volumes:
+      - ./data/mongodb:/data/mongodb
+
+  product-api:
+    container_name: maoudia-product-api
+    image: clue/json-server:latest
+    ports:
+      - 1519:80
+    volumes:
+      - ./data/product/db.json:/data/db.json
+
+networks:
+  mongodb-network:
+    driver: bridge

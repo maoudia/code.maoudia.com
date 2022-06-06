@@ -1,0 +1,24 @@
+app:
+  buffer-max-size: 500
+  bulk-size: 100
+  collection-name: address
+  enriching-key: product
+  enriching-uri: http://localhost:1519/products/1
+spring:
+  application:
+    name: bulk-update-with-spring-data-mongodb-reactive
+  main:
+    web-application-type: none
+  data:
+    mongodb:
+      database: test
+      uri: mongodb://admin:password@localhost:15015
+---
+spring.config.activate.on-profile: dev
+logging:
+  level:
+    org.mongodb.driver: debug
+---
+spring.config.activate.on-profile: test
+app:
+  bulk-size: 2
