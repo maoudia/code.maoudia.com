@@ -34,7 +34,7 @@ jobs:
       run: |
         for project in $(find . -name "pom.xml" -exec dirname {} \;); do
           echo "Building and testing project in folder: $project"
-          (cd "$project" && mvn --batch-mode --update-snapshots clean verify)
+          (cd "$project" && mvn --batch-mode --update-snapshots --no-transfer-progress verify -Dspring.profiles.active=test)
           if [ $? -ne 0 ]; then
             echo "Failed to build or test project in folder: $project"
             exit 1
