@@ -1,11 +1,8 @@
 package com.maoudia.tutorial;
 
 import com.mongodb.bulk.BulkWriteResult;
-import com.mongodb.bulk.BulkWriteUpsert;
 import com.mongodb.internal.bulk.WriteRequest;
-import org.bson.BsonValue;
 import org.bson.Document;
-import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,7 +26,7 @@ import java.util.List;
 class CollectionServiceTest {
 
     @Container
-    private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:5.0.8")
+    private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0.2")
             .withReuse(true);
 
     @DynamicPropertySource
