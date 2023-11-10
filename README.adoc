@@ -24,7 +24,7 @@ endif::[]
 :url-repo: https://github.com/maoudia/code.maoudia.com
 ifdef::status[]
 image:https://img.shields.io/badge/license-MIT-blue.svg[MIT License, link=#copyright-and-license]
-image:{url-repo}/actions/workflows/ci.yml/badge.svg?branch={branch}[Build Status (GitHub Actions),link={url-repo}/actions/workflows/ci.yml?query=branch%3A{branch}]
+image:{url-repo}/actions/workflows/ci.yml/badge.svg[Build Status (GitHub Actions), link={url-repo}/actions/workflows/ci.yml]
 endif::[]
 
 Some of the source code for https://www.maoudia.com/[maoudia.com]
