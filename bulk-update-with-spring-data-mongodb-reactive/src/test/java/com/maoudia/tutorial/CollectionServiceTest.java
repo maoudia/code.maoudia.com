@@ -1,40 +1,42 @@
 package com.maoudia.tutorial;
 
 import com.mongodb.bulk.BulkWriteResult;
-import com.mongodb.bulk.BulkWriteUpsert;
 import com.mongodb.internal.bulk.WriteRequest;
-import org.bson.BsonValue;
 import org.bson.Document;
-import org.bson.types.ObjectId;
+import org.junit.ClassRule;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 import reactor.test.StepVerifier;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
-@Profile("test")
 @SpringBootTest
 @Testcontainers
 class CollectionServiceTest {
 
+
     @Container
-    private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:5.0.8")
-            .withReuse(true);
+    public static GenericContainer<?> jsonServerContainer = new GenericContainer<>("clue/json-server:latest")
+            .withExposedPorts(80)
+            .withFileSystemBind("./data/product/db.json", "/data/db.json");
+
+    @Container
+    private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0.2");
 
     @DynamicPropertySource
     private static void setProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+        registry.add("app.enriching-uri", () -> "http://" + jsonServerContainer.getHost() + ":" + jsonServerContainer.getMappedPort(80) + "/products/1");
     }
 
     @Autowired
@@ -62,7 +64,7 @@ class CollectionServiceTest {
         BulkWriteResult expectedBulkWriteResult2 = BulkWriteResult.acknowledged(WriteRequest.Type.REPLACE, 1, 1, Collections.emptyList(),
                 Collections.emptyList());
 
-        command.enrichAll( properties.getCollectionName(), properties.getEnrichingKey() , properties.getEnrichingUri())
+        command.enrichAll(properties.getCollectionName(), properties.getEnrichingKey() , properties.getEnrichingUri())
                 .as(StepVerifier::create)
                 .expectNext(expectedBulkWriteResult1)
                 .expectNext(expectedBulkWriteResult2)

@@ -1,3 +1,30 @@
 = code.maoudia.com
 
+// Settings:
+:idprefix:
+:idseparator: -
+ifndef::env-github[:icons: font]
+ifdef::env-github,env-browser[]
+:toc: macro
+:toclevels: 1
+endif::[]
+ifdef::env-github[]
+:branch: main
+:status:
+:outfilesuffix: .adoc
+:!toc-title:
+:caution-caption: :fire:
+:important-caption: :exclamation:
+:note-caption: :paperclip:
+:tip-caption: :bulb:
+:warning-caption: :warning:
+endif::[]
+
+// URIs:
+:url-repo: https://github.com/maoudia/code.maoudia.com
+ifdef::status[]
+image:https://img.shields.io/badge/license-MIT-blue.svg[MIT License, link=#copyright-and-license]
+image:{url-repo}/actions/workflows/ci.yml/badge.svg?branch={branch}[Build Status (GitHub Actions),link={url-repo}/actions/workflows/ci.yml?query=branch%3A{branch}]
+endif::[]
+
 Some of the source code for https://www.maoudia.com/[maoudia.com]
