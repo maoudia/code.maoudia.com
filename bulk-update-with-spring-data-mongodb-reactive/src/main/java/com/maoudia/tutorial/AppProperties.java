@@ -16,7 +16,6 @@ import java.net.URI;
 @ConfigurationProperties(prefix = "app")
 @Validated
 public record AppProperties(
-
         /*
          * The bulk size configuration.
          */
