@@ -7,11 +7,10 @@ import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.mongo.MongoReactiveRepositoriesAutoConfiguration;
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import reactor.core.scheduler.Schedulers;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @SpringBootApplication(exclude = MongoReactiveRepositoriesAutoConfiguration.class)
-@ConfigurationPropertiesScan("com.maoudia.tutorial")
+@EnableConfigurationProperties(AppProperties.class)
 public class Application implements CommandLineRunner, ExitCodeGenerator {
     private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
     private final AppProperties properties;
