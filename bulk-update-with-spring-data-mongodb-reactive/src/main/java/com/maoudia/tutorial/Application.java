@@ -8,6 +8,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.mongo.MongoReactiveRepositoriesAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import reactor.core.scheduler.Schedulers;
 
 @SpringBootApplication(exclude = MongoReactiveRepositoriesAutoConfiguration.class)
 @ConfigurationPropertiesScan("com.maoudia.tutorial")
@@ -28,7 +29,7 @@ public class Application implements CommandLineRunner, ExitCodeGenerator {
 
     @Override
     public void run(final String... args) {
-        service.enrichAll(properties.getCollectionName(), properties.getEnrichingKey(), properties.getEnrichingUri())
+        service.enrichAll(properties.collectionName(), properties.enrichingKey(), properties.enrichingUri())
                 .doOnSubscribe(unused -> LOGGER.info("------------------< Staring Collection Enriching Command >-------------------"))
                 .doOnNext(bulkWriteResult -> LOGGER.info("Bulk write result with {} modified document(s)", bulkWriteResult.getModifiedCount()))
                 .doOnError(throwable -> {

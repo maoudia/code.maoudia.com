@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Application" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+    <option name="ACTIVE_PROFILES" value="dev" />
+    <envs>
+      <env name="spring.profiles.active" value="test" />
+      <env name="reactor.schedulers.defaultBoundedElasticOnVirtualThreads" value="true" />
+    </envs>
+    <module name="bulk-update-with-spring-data-mongodb-reactive" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.maoudia.tutorial.Application" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

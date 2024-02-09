@@ -1,52 +1,52 @@
 package com.maoudia.tutorial;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.DefaultValue;
+import org.springframework.validation.annotation.Validated;
 
+import java.net.URI;
+
+/**
+ * Configuration properties for the application.
+ * These properties are bound from the application.yml (or application.properties) file using the specified prefix.
+ */
 @ConfigurationProperties(prefix = "app")
-public class AppProperties{
-    private int bulkSize;
-    private int bufferMaxSize;
-    private String collectionName;
-    private String enrichingKey;
-    private String enrichingUri;
+@Validated
+public record AppProperties(
 
-    public int getBulkSize() {
-        return bulkSize;
-    }
+        /*
+         * The bulk size configuration.
+         */
+        @DefaultValue("128")
+        @Positive
+        int bulkSize,
 
-    public void setBulkSize(final int bulkSize) {
-        this.bulkSize = bulkSize;
-    }
+        /*
+         * The maximum buffer size configuration.
+         */
+        @DefaultValue("1024")
+        @Positive
+        int bufferMaxSize,
 
-    public int getBufferMaxSize() {
-        return bufferMaxSize;
-    }
+        /*
+         * The name of the collection.
+         */
+        @NotBlank
+        String collectionName,
 
-    public void setBufferMaxSize(final int bufferMaxSize) {
-        this.bufferMaxSize = bufferMaxSize;
-    }
+        /*
+         * The key used for enriching.
+         */
+        @NotBlank
+        String enrichingKey,
 
-    public String getCollectionName() {
-        return collectionName;
-    }
-
-    public void setCollectionName(final String collectionName) {
-        this.collectionName = collectionName;
-    }
-
-    public String getEnrichingKey() {
-        return enrichingKey;
-    }
-
-    public void setEnrichingKey(final String enrichingKey) {
-        this.enrichingKey = enrichingKey;
-    }
-
-    public String getEnrichingUri() {
-        return enrichingUri;
-    }
-
-    public void setEnrichingUri(final String enrichingUri) {
-        this.enrichingUri = enrichingUri;
-    }
+        /*
+         * The URI used for enriching.
+         */
+        @NotNull
+        URI enrichingUri
+) {
 }

@@ -1,0 +1,23 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="CollectionServiceTest" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+    <module name="bulk-update-with-spring-data-mongodb-reactive" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.maoudia.tutorial.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <option name="PACKAGE_NAME" value="com.maoudia.tutorial" />
+    <option name="MAIN_CLASS_NAME" value="com.maoudia.tutorial.CollectionServiceTest" />
+    <option name="METHOD_NAME" value="" />
+    <option name="TEST_OBJECT" value="class" />
+    <option name="VM_PARAMETERS" />
+    <envs>
+      <env name="spring.profiles.active" value="test" />
+      <env name="reactor.schedulers.defaultBoundedElasticOnVirtualThreads" value="true" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
