@@ -42,15 +42,20 @@ public class CollectionService {
         this.client = client;
     }
 
-    public Flux<BulkWriteResult> enrichAll(String collectionName, String enrichingKey, String enrichingUri) {
+    public Flux<BulkWriteResult> enrichAll(String collectionName,
+                                           String enrichingKey,
+                                           URI enrichingUri) {
         return template.findAll(Document.class, collectionName)
-                .onBackpressureBuffer(properties.getBufferMaxSize())
+                .onBackpressureBuffer(properties.bufferMaxSize())
                 .flatMap(document -> enrich(document, enrichingKey, enrichingUri))
                 .map(CollectionService::toReplaceOneModel)
-                .window(properties.getBulkSize())
+                .window(properties.bulkSize())
                 .flatMap(replaceOneModelFlux -> bulkWrite(replaceOneModelFlux, collectionName));
     }
-    private Publisher<Document> enrich(Document document, String enrichingKey, String enrichingUri) {
+
+    private Publisher<Document> enrich(Document document,
+                                       String enrichingKey,
+                                       URI enrichingUri) {
         return getEnrichingDocument(enrichingUri)
                 .map(enrichingDocument -> {
                     document.put(enrichingKey, enrichingDocument);
@@ -59,13 +64,15 @@ public class CollectionService {
                 });
     }
 
-    private Mono<Document> getEnrichingDocument(String enrichingUri) {
+    private Mono<Document> getEnrichingDocument(URI enrichingUri) {
         return client.get()
-                .uri(URI.create(enrichingUri))
+                .uri(enrichingUri)
                 .retrieve()
                 .bodyToMono(Document.class);
     }
-    private Flux<BulkWriteResult> bulkWrite(Flux<ReplaceOneModel<Document>> updateOneModelFlux, String collectionName) {
+
+    private Flux<BulkWriteResult> bulkWrite(Flux<ReplaceOneModel<Document>> updateOneModelFlux,
+                                            String collectionName) {
         return updateOneModelFlux
                 .collectList()
                 .flatMapMany(updateOneModels -> template.getCollection(collectionName)
