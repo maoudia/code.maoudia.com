@@ -1,5 +1,6 @@
 package com.maoudia.tutorial;
 
+import com.mongodb.TransactionOptions;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.Filters;
@@ -10,6 +11,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -33,13 +35,16 @@ public class CollectionService {
     private final AppProperties properties;
     private final ReactiveMongoTemplate template;
     private final WebClient client;
+    private final TransactionalOperator transactionalOperator;
 
     public CollectionService(AppProperties properties,
                              ReactiveMongoTemplate template,
-                             WebClient client) {
+                             WebClient client,
+                             TransactionalOperator transactionalOperator) {
         this.properties = properties;
         this.template = template;
         this.client = client;
+        this.transactionalOperator = transactionalOperator;
     }
 
     public Flux<BulkWriteResult> enrichAll(String collectionName,
@@ -71,12 +76,13 @@ public class CollectionService {
                 .bodyToMono(Document.class);
     }
 
-    private Flux<BulkWriteResult> bulkWrite(Flux<ReplaceOneModel<Document>> updateOneModelFlux,
+    private Publisher<BulkWriteResult> bulkWrite(Flux<ReplaceOneModel<Document>> updateOneModelFlux,
                                             String collectionName) {
         return updateOneModelFlux
                 .collectList()
                 .flatMapMany(updateOneModels -> template.getCollection(collectionName)
-                        .flatMapMany(collection -> collection.bulkWrite(updateOneModels, BULK_WRITE_OPTIONS)));
+                        .flatMapMany(collection -> collection.bulkWrite(updateOneModels, BULK_WRITE_OPTIONS)))
+                .as(transactionalOperator::transactional);
     }
 
 }

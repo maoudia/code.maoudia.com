@@ -55,3 +55,4 @@ build/
 
 ### VS Code ###
 .vscode/
+bulk-update-with-spring-data-mongodb-reactive/.DS_Store

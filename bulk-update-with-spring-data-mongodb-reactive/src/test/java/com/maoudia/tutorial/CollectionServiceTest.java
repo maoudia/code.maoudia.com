@@ -32,7 +32,8 @@ class CollectionServiceTest {
             .withReuse(true);
 
     @Container
-    private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0.2");
+    private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0.2")
+            .withCommand("--replSet rs0 --bind_ip_all");
 
     @DynamicPropertySource
     private static void setProperties(DynamicPropertyRegistry registry) {

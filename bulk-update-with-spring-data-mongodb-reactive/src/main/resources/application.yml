@@ -1,5 +1,5 @@
 app:
-  buffer-max-size: 500
+  buffer-max-size: 1000
   bulk-size: 100
   collection-name: address
   enriching-key: product
@@ -12,7 +12,7 @@ spring:
   data:
     mongodb:
       database: test
-      uri: mongodb://admin:password@localhost:15015
+      uri: mongodb://localhost:15015/?replicaSet=rs0&retryWrites=false
 ---
 spring.config.activate.on-profile: dev
 logging:
