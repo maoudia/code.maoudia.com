@@ -6,6 +6,7 @@
       <env name="reactor.schedulers.defaultBoundedElasticOnVirtualThreads" value="true" />
       <env name="java.rmi.server.hostname" value="localhost" />
       <env name="enable-reactor-debug-agent" value="true" />
+      <env name="enable-reactor-metrics" value="true" />
     </envs>
     <module name="bulk-update-with-spring-data-mongodb-reactive" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.maoudia.tutorial.Application" />

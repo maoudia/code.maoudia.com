@@ -15,11 +15,12 @@
     <description>Bulk Update with Spring data MongoDB Reactive</description>
     <properties>
         <java.version>21</java.version>
-        <netty-resolver-dns-native-macos.version>4.1.76.Final</netty-resolver-dns-native-macos.version>
         <byte-buddy.version>1.14.11</byte-buddy.version>
         <reactor-tools.version>3.6.2</reactor-tools.version>
+        <netty-resolver-dns-native-macos.version>4.1.76.Final</netty-resolver-dns-native-macos.version>
 
         <enable-reactor-debug-agent>false</enable-reactor-debug-agent>
+        <enable-reactor-metrics>false</enable-reactor-metrics>
     </properties>
     <dependencies>
         <dependency>
@@ -51,7 +52,6 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
-
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-tools</artifactId>

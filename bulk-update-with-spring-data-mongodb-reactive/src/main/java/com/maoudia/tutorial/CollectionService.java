@@ -1,18 +1,19 @@
 package com.maoudia.tutorial;
 
-import com.mongodb.TransactionOptions;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOneModel;
 import com.mongodb.client.model.ReplaceOptions;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.observation.ObservationRegistry;
 import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.observability.micrometer.Micrometer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -36,21 +37,26 @@ public class CollectionService {
     private final ReactiveMongoTemplate template;
     private final WebClient client;
     private final TransactionalOperator transactionalOperator;
+    private final MeterRegistry meterRegistry;
 
     public CollectionService(AppProperties properties,
                              ReactiveMongoTemplate template,
                              WebClient client,
-                             TransactionalOperator transactionalOperator) {
+                             TransactionalOperator transactionalOperator, ObservationRegistry observationRegistry, MeterRegistry meterRegistry) {
         this.properties = properties;
         this.template = template;
         this.client = client;
         this.transactionalOperator = transactionalOperator;
+        this.meterRegistry = meterRegistry;
     }
 
     public Flux<BulkWriteResult> enrichAll(String collectionName,
                                            String enrichingKey,
                                            URI enrichingUri) {
         return template.findAll(Document.class, collectionName)
+                .name("app.documents.flux")
+                .tag("source", "mongodb")
+                .tap(Micrometer.metrics(meterRegistry))
                 .onBackpressureBuffer(properties.bufferMaxSize())
                 .flatMap(document -> enrich(document, enrichingKey, enrichingUri))
                 .map(CollectionService::toReplaceOneModel)
@@ -73,16 +79,24 @@ public class CollectionService {
         return client.get()
                 .uri(enrichingUri)
                 .retrieve()
-                .bodyToMono(Document.class);
+                .bodyToMono(Document.class)
+                .name("app.enriching.call")
+                .tag("source", "http")
+                .doOnNext(unused -> meterRegistry.getMeters())
+                .tap(Micrometer.metrics(meterRegistry));
     }
 
     private Publisher<BulkWriteResult> bulkWrite(Flux<ReplaceOneModel<Document>> updateOneModelFlux,
                                             String collectionName) {
         return updateOneModelFlux
+                .name("app.documents.bulk")
+                .tap(Micrometer.metrics(meterRegistry))
                 .collectList()
                 .flatMapMany(updateOneModels -> template.getCollection(collectionName)
                         .flatMapMany(collection -> collection.bulkWrite(updateOneModels, BULK_WRITE_OPTIONS)))
-                .as(transactionalOperator::transactional);
+                .as(transactionalOperator::transactional)
+                .name("app.transactions")
+                .tap(Micrometer.metrics(meterRegistry));
     }
 
 }

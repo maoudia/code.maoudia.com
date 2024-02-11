@@ -21,7 +21,9 @@ services:
     networks:
       - mongodb-network
     environment:
-      - ME_CONFIG_MONGODB_URL=mongodb://maoudia-mongodb:15015/?replicaSet=rs0
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=password
+      - ME_CONFIG_MONGODB_URL=mongodb://maoudia-mongodb:15015
     ports:
       - 1515:8081
     volumes:

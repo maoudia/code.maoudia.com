@@ -8,16 +8,16 @@ spring:
   application:
     name: bulk-update-with-spring-data-mongodb-reactive
   main:
-    web-application-type: none
+    web-application-type: NONE
   data:
     mongodb:
       database: test
-      uri: mongodb://localhost:15015/?replicaSet=rs0&retryWrites=false
+      uri: mongodb://localhost:15015
 ---
 spring.config.activate.on-profile: dev
 logging:
   level:
-    org.mongodb.driver: debug
+    org.mongodb.driver: DEBUG
 ---
 spring.config.activate.on-profile: test
 app:
