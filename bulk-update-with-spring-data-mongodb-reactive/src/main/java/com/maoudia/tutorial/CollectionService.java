@@ -6,7 +6,6 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOneModel;
 import com.mongodb.client.model.ReplaceOptions;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.observation.ObservationRegistry;
 import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -42,7 +41,7 @@ public class CollectionService {
     public CollectionService(AppProperties properties,
                              ReactiveMongoTemplate template,
                              WebClient client,
-                             TransactionalOperator transactionalOperator, ObservationRegistry observationRegistry, MeterRegistry meterRegistry) {
+                             TransactionalOperator transactionalOperator, MeterRegistry meterRegistry) {
         this.properties = properties;
         this.template = template;
         this.client = client;

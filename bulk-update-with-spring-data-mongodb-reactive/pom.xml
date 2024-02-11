@@ -20,7 +20,6 @@
         <netty-resolver-dns-native-macos.version>4.1.76.Final</netty-resolver-dns-native-macos.version>
 
         <enable-reactor-debug-agent>false</enable-reactor-debug-agent>
-        <enable-reactor-metrics>false</enable-reactor-metrics>
     </properties>
     <dependencies>
         <dependency>
