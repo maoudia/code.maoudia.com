@@ -41,7 +41,8 @@ public class CollectionService {
     public CollectionService(AppProperties properties,
                              ReactiveMongoTemplate template,
                              WebClient client,
-                             TransactionalOperator transactionalOperator, MeterRegistry meterRegistry) {
+                             TransactionalOperator transactionalOperator,
+                             MeterRegistry meterRegistry) {
         this.properties = properties;
         this.template = template;
         this.client = client;
@@ -81,7 +82,6 @@ public class CollectionService {
                 .bodyToMono(Document.class)
                 .name("app.enriching.call")
                 .tag("source", "http")
-                .doOnNext(unused -> meterRegistry.getMeters())
                 .tap(Micrometer.metrics(meterRegistry));
     }
 
