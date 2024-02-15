@@ -24,6 +24,7 @@ import reactor.util.retry.RetryBackoffSpec;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Date;
+import java.util.function.Function;
 
 @Service
 public class CollectionService {
@@ -112,16 +113,17 @@ public class CollectionService {
                 .flatMapMany(tuple -> tuple.getT2().bulkWrite(tuple.getT1(), BULK_WRITE_OPTIONS))
                 .as(transactionalOperator::transactional)
                 .name("app.transactions")
-                .tap(Micrometer.observation(
-                        observationRegistry,
-                        registry -> Observation.createNotStarted(
-                                "transaction",
-                                () -> {
-                                    Observation.Context context = new Observation.Context();
-                                    context.addLowCardinalityKeyValues(KeyValues.of("context", "transaction"));
-                                    return context;
-                                },
-                                registry))
-                );
+                .tap(Micrometer.observation(observationRegistry, createTransactionObservation()));
+    }
+
+    private static Function<ObservationRegistry, Observation> createTransactionObservation() {
+        return registry -> Observation.createNotStarted(
+                "transaction",
+                () -> {
+                    Observation.Context context = new Observation.Context();
+                    context.addLowCardinalityKeyValues(KeyValues.of("context", "transaction"));
+                    return context;
+                },
+                registry);
     }
 }
