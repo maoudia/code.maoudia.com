@@ -111,9 +111,9 @@ public class CollectionService {
                 .collectList()
                 .zipWith(template.getCollection(collectionName))
                 .flatMapMany(tuple -> tuple.getT2().bulkWrite(tuple.getT1(), BULK_WRITE_OPTIONS))
-                .as(transactionalOperator::transactional)
                 .name("app.transactions")
-                .tap(Micrometer.observation(observationRegistry, createTransactionObservation()));
+                .tap(Micrometer.observation(observationRegistry, createTransactionObservation()))
+                .as(transactionalOperator::transactional);
     }
 
     private static Function<ObservationRegistry, Observation> createTransactionObservation() {
