@@ -8,6 +8,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.mongo.MongoReactiveRepositoriesAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import reactor.tools.agent.ReactorDebugAgent;
 
 @SpringBootApplication(exclude = MongoReactiveRepositoriesAutoConfiguration.class)
 @EnableConfigurationProperties(AppProperties.class)
@@ -18,10 +19,16 @@ public class Application implements CommandLineRunner, ExitCodeGenerator {
     private int exitCode = 255;
 
     public static void main(String[] args) {
+        if (Boolean.parseBoolean(System.getenv("enable-reactor-debug-agent"))) {
+            ReactorDebugAgent.init();
+            ReactorDebugAgent.processExistingClasses();
+        }
+
         System.exit(SpringApplication.exit(SpringApplication.run(Application.class, args)));
     }
 
-    public Application(AppProperties properties, CollectionService service) {
+    public Application(AppProperties properties,
+                       CollectionService service) {
         this.properties = properties;
         this.service = service;
     }
@@ -44,5 +51,4 @@ public class Application implements CommandLineRunner, ExitCodeGenerator {
     public int getExitCode() {
         return exitCode;
     }
-
 }

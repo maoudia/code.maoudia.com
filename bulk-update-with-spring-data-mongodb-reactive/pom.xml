@@ -15,7 +15,11 @@
     <description>Bulk Update with Spring data MongoDB Reactive</description>
     <properties>
         <java.version>21</java.version>
+        <byte-buddy.version>1.14.11</byte-buddy.version>
+        <reactor-tools.version>3.6.2</reactor-tools.version>
         <netty-resolver-dns-native-macos.version>4.1.76.Final</netty-resolver-dns-native-macos.version>
+
+        <enable-reactor-debug-agent>false</enable-reactor-debug-agent>
     </properties>
     <dependencies>
         <dependency>
@@ -28,17 +32,44 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-observation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core-micrometer</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-tools</artifactId>
+            <version>${reactor-tools.version}</version>
+            <classifier>original</classifier>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-observation-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -63,9 +94,62 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <compilerArgs>--enable-preview</compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>--enable-preview</argLine>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <profiles>
+        <profile>
+            <id>reactor-debug-agent</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <property>
+                    <name>enable-reactor-debug-agent</name>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy</artifactId>
+                    <version>${byte-buddy.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy-agent</artifactId>
+                    <version>${byte-buddy.version}</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>net.bytebuddy</groupId>
+                        <artifactId>byte-buddy-maven-plugin</artifactId>
+                        <version>${byte-buddy.version}</version>
+                        <configuration>
+                            <transformations>
+                                <transformation>
+                                    <plugin>reactor.tools.agent.ReactorDebugByteBuddyPlugin</plugin>
+                                </transformation>
+                            </transformations>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>macos-arm</id>
             <activation>

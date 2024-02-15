@@ -5,17 +5,26 @@ import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOneModel;
 import com.mongodb.client.model.ReplaceOptions;
+import io.micrometer.common.KeyValues;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.observability.micrometer.Micrometer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.RetryBackoffSpec;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.Date;
+import java.util.function.Function;
 
 @Service
 public class CollectionService {
@@ -33,33 +42,50 @@ public class CollectionService {
     private final AppProperties properties;
     private final ReactiveMongoTemplate template;
     private final WebClient client;
+    private final TransactionalOperator transactionalOperator;
+    private final MeterRegistry meterRegistry;
+    private final ObservationRegistry observationRegistry;
+    private final RetryBackoffSpec retryBackoffSpec;
 
     public CollectionService(AppProperties properties,
                              ReactiveMongoTemplate template,
-                             WebClient client) {
+                             WebClient client,
+                             TransactionalOperator transactionalOperator,
+                             MeterRegistry meterRegistry,
+                             ObservationRegistry observationRegistry,
+                             RetryBackoffSpec retryBackoffSpec) {
         this.properties = properties;
         this.template = template;
         this.client = client;
+        this.transactionalOperator = transactionalOperator;
+        this.meterRegistry = meterRegistry;
+        this.observationRegistry = observationRegistry;
+        this.retryBackoffSpec = retryBackoffSpec;
     }
 
     public Flux<BulkWriteResult> enrichAll(String collectionName,
                                            String enrichingKey,
                                            URI enrichingUri) {
         return template.findAll(Document.class, collectionName)
+                .name("app.documents.flux")
+                .tag("source", "mongodb")
+                .tap(Micrometer.metrics(meterRegistry))
                 .onBackpressureBuffer(properties.bufferMaxSize())
-                .flatMap(document -> enrich(document, enrichingKey, enrichingUri))
+                .flatMap(document -> this.enrich(document, enrichingKey, enrichingUri))
                 .map(CollectionService::toReplaceOneModel)
                 .window(properties.bulkSize())
-                .flatMap(replaceOneModelFlux -> bulkWrite(replaceOneModelFlux, collectionName));
+                .flatMap(replaceOneModelFlux -> this.bulkWrite(replaceOneModelFlux, collectionName));
     }
 
     private Publisher<Document> enrich(Document document,
                                        String enrichingKey,
                                        URI enrichingUri) {
-        return getEnrichingDocument(enrichingUri)
+        return this.getEnrichingDocument(enrichingUri)
                 .map(enrichingDocument -> {
+                    Instant now = Instant.now();
+                    Date utcDate = Date.from(now);
                     document.put(enrichingKey, enrichingDocument);
-                    document.put("updatedAt", new Date());
+                    document.put("updatedAt", utcDate);
                     return document;
                 });
     }
@@ -68,15 +94,36 @@ public class CollectionService {
         return client.get()
                 .uri(enrichingUri)
                 .retrieve()
-                .bodyToMono(Document.class);
+                .bodyToMono(Document.class)
+                .publishOn(Schedulers.boundedElastic())
+                .tap(Micrometer.observation(observationRegistry))
+                .retryWhen(retryBackoffSpec)
+                .name("app.enriching.call")
+                .tag("source", "http")
+                .tap(Micrometer.metrics(meterRegistry));
     }
 
-    private Flux<BulkWriteResult> bulkWrite(Flux<ReplaceOneModel<Document>> updateOneModelFlux,
-                                            String collectionName) {
+    private Publisher<BulkWriteResult> bulkWrite(Flux<ReplaceOneModel<Document>> updateOneModelFlux,
+                                                 String collectionName) {
         return updateOneModelFlux
+                .name("app.documents.bulk")
+                .tap(Micrometer.metrics(meterRegistry))
                 .collectList()
-                .flatMapMany(updateOneModels -> template.getCollection(collectionName)
-                        .flatMapMany(collection -> collection.bulkWrite(updateOneModels, BULK_WRITE_OPTIONS)));
+                .zipWith(template.getCollection(collectionName))
+                .flatMapMany(tuple -> tuple.getT2().bulkWrite(tuple.getT1(), BULK_WRITE_OPTIONS))
+                .name("app.transactions")
+                .tap(Micrometer.observation(observationRegistry, createTransactionObservation()))
+                .as(transactionalOperator::transactional);
     }
 
+    private static Function<ObservationRegistry, Observation> createTransactionObservation() {
+        return registry -> Observation.createNotStarted(
+                "transaction",
+                () -> {
+                    Observation.Context context = new Observation.Context();
+                    context.addLowCardinalityKeyValues(KeyValues.of("context", "transaction"));
+                    return context;
+                },
+                registry);
+    }
 }
