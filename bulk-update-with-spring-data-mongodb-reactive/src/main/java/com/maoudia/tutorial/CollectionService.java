@@ -25,6 +25,7 @@ import reactor.util.retry.Retry;
 import reactor.util.retry.RetryBackoffSpec;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
@@ -83,8 +84,10 @@ public class CollectionService {
                                        URI enrichingUri) {
         return getEnrichingDocument(enrichingUri)
                 .map(enrichingDocument -> {
+                    Instant now = Instant.now();
+                    Date utcDate = Date.from(now);
                     document.put(enrichingKey, enrichingDocument);
-                    document.put("updatedAt", new Date());
+                    document.put("updatedAt", utcDate);
                     return document;
                 });
     }
@@ -95,8 +98,7 @@ public class CollectionService {
                 .retrieve()
                 .bodyToMono(Document.class)
                 .publishOn(Schedulers.boundedElastic())
-                .tap(Micrometer.observation(
-                        observationRegistry))
+                .tap(Micrometer.observation(observationRegistry))
                 .retryWhen(getRetryBackoffSpec())
                 .name("app.enriching.call")
                 .tag("source", "http")
