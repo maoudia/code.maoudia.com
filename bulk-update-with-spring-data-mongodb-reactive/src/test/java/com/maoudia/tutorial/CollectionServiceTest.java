@@ -3,6 +3,7 @@ package com.maoudia.tutorial;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.internal.bulk.WriteRequest;
 import org.bson.Document;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,7 +39,7 @@ class CollectionServiceTest {
     @DynamicPropertySource
     private static void setProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-        registry.add("app.enriching-uri", () -> "http://" + jsonServerContainer.getHost() + ":" + jsonServerContainer.getMappedPort(80) + "/products/1");
+        registry.add("app.enriching-uri", () -> STR."http://\{jsonServerContainer.getHost()}:\{jsonServerContainer.getMappedPort(80)}/products/1");
     }
 
     @Autowired
@@ -49,7 +50,8 @@ class CollectionServiceTest {
     private ReactiveMongoTemplate template;
 
     @Test
-    void multipleBulkWriteResultsAreReturned() {
+    @DisplayName("enrichAll should return multiple BulkWriteResults")
+    void returnMultipleBulkWriteResults() {
         Document givenDocument1 = new Document();
         givenDocument1.put("_id", "628ea3edb5110304e5e814f6");
         givenDocument1.put("type", "municipality");

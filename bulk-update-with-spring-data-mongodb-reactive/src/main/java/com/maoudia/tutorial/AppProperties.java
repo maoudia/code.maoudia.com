@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
 
 import java.net.URI;
+import java.time.Duration;
 
 /**
  * Configuration properties for the application.
@@ -18,6 +19,7 @@ import java.net.URI;
 public record AppProperties(
         /*
          * The bulk size configuration.
+         * The Default value is 128
          */
         @DefaultValue("128")
         @Positive
@@ -25,6 +27,7 @@ public record AppProperties(
 
         /*
          * The maximum buffer size configuration.
+         * The Default value is 1024.
          */
         @DefaultValue("1024")
         @Positive
@@ -46,6 +49,20 @@ public record AppProperties(
          * The URI used for enriching.
          */
         @NotNull
-        URI enrichingUri
+        URI enrichingUri,
+
+        /*
+         * Maximum number of retry attempts.
+         * The Default value is 6.
+         */
+        @DefaultValue("6")
+        int retryMaxAttempts,
+
+        /*
+         * Minimum backoff duration between retry attempts.
+         * The Default value is 2 seconds.
+         */
+        @DefaultValue("2s")
+        Duration retryMinBackOff
 ) {
 }

@@ -4,6 +4,8 @@ app:
   collection-name: address
   enriching-key: product
   enriching-uri: http://localhost:1519/products/1
+  retry-min-back-off: 1s
+  retry-max-attempts: 3
 spring:
   application:
     name: bulk-update-with-spring-data-mongodb-reactive
