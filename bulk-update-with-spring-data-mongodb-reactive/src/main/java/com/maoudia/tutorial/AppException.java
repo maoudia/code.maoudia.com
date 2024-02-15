@@ -3,7 +3,6 @@ package com.maoudia.tutorial;
 import java.util.function.Supplier;
 
 public class AppException extends RuntimeException {
-
     private final int errorCode;
 
     public AppException(String reason) {

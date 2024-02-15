@@ -8,6 +8,7 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 
 @Configuration
 public class MongoDBConfig {
+
     @Bean
     public TransactionalOperator transactionalOperator(ReactiveMongoTransactionManager mongoTransactionManager) {
         return TransactionalOperator.create(mongoTransactionManager);
@@ -17,4 +18,5 @@ public class MongoDBConfig {
     public ReactiveMongoTransactionManager mongoTransactionManager(ReactiveMongoDatabaseFactory mongoDatabaseFactory) {
         return new ReactiveMongoTransactionManager(mongoDatabaseFactory);
     }
+
 }

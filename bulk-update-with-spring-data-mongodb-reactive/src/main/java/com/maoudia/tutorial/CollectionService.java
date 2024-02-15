@@ -48,7 +48,6 @@ public class CollectionService {
     private final WebClient client;
     private final TransactionalOperator transactionalOperator;
     private final MeterRegistry meterRegistry;
-
     private final ObservationRegistry observationRegistry;
 
     public CollectionService(AppProperties properties,

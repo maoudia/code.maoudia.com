@@ -51,5 +51,4 @@ public class Application implements CommandLineRunner, ExitCodeGenerator {
     public int getExitCode() {
         return exitCode;
     }
-
 }

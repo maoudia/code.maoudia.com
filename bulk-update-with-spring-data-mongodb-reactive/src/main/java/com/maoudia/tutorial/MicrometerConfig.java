@@ -9,17 +9,17 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class MicrometerConfig {
-
-    private final Logger logger = LoggerFactory.getLogger(MicrometerConfig.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MicrometerConfig.class);
 
     @Bean
     public ObservationTextPublisher transactionObservationTextPublisher() {
         return new ObservationTextPublisher(
-                logger::info,
+                LOGGER::info,
                 context -> context
                         .getLowCardinalityKeyValues()
                         .stream()
                         .anyMatch(keyValue -> keyValue.getKey().equals("context") && keyValue.getValue().equals("transaction")),
                 Observation.Context::getName);
     }
+
 }
