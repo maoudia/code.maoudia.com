@@ -11,8 +11,6 @@ import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import org.bson.Document;
 import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
@@ -21,17 +19,14 @@ import reactor.core.observability.micrometer.Micrometer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.retry.Retry;
 import reactor.util.retry.RetryBackoffSpec;
 
 import java.net.URI;
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 
 @Service
 public class CollectionService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CollectionService.class);
     private static final ReplaceOptions REPLACE_OPTIONS = new ReplaceOptions();
     private static final BulkWriteOptions BULK_WRITE_OPTIONS = new BulkWriteOptions().ordered(false);
 
@@ -49,19 +44,22 @@ public class CollectionService {
     private final TransactionalOperator transactionalOperator;
     private final MeterRegistry meterRegistry;
     private final ObservationRegistry observationRegistry;
+    private final RetryBackoffSpec retryBackoffSpec;
 
     public CollectionService(AppProperties properties,
                              ReactiveMongoTemplate template,
                              WebClient client,
                              TransactionalOperator transactionalOperator,
                              MeterRegistry meterRegistry,
-                             ObservationRegistry observationRegistry) {
+                             ObservationRegistry observationRegistry,
+                             RetryBackoffSpec retryBackoffSpec) {
         this.properties = properties;
         this.template = template;
         this.client = client;
         this.transactionalOperator = transactionalOperator;
         this.meterRegistry = meterRegistry;
         this.observationRegistry = observationRegistry;
+        this.retryBackoffSpec = retryBackoffSpec;
     }
 
     public Flux<BulkWriteResult> enrichAll(String collectionName,
@@ -72,16 +70,16 @@ public class CollectionService {
                 .tag("source", "mongodb")
                 .tap(Micrometer.metrics(meterRegistry))
                 .onBackpressureBuffer(properties.bufferMaxSize())
-                .flatMap(document -> enrich(document, enrichingKey, enrichingUri))
+                .flatMap(document -> this.enrich(document, enrichingKey, enrichingUri))
                 .map(CollectionService::toReplaceOneModel)
                 .window(properties.bulkSize())
-                .flatMap(replaceOneModelFlux -> bulkWrite(replaceOneModelFlux, collectionName));
+                .flatMap(replaceOneModelFlux -> this.bulkWrite(replaceOneModelFlux, collectionName));
     }
 
     private Publisher<Document> enrich(Document document,
                                        String enrichingKey,
                                        URI enrichingUri) {
-        return getEnrichingDocument(enrichingUri)
+        return this.getEnrichingDocument(enrichingUri)
                 .map(enrichingDocument -> {
                     Instant now = Instant.now();
                     Date utcDate = Date.from(now);
@@ -98,7 +96,7 @@ public class CollectionService {
                 .bodyToMono(Document.class)
                 .publishOn(Schedulers.boundedElastic())
                 .tap(Micrometer.observation(observationRegistry))
-                .retryWhen(getRetryBackoffSpec())
+                .retryWhen(retryBackoffSpec)
                 .name("app.enriching.call")
                 .tag("source", "http")
                 .tap(Micrometer.metrics(meterRegistry));
@@ -125,21 +123,5 @@ public class CollectionService {
                                 },
                                 registry))
                 );
-    }
-
-    private RetryBackoffSpec getRetryBackoffSpec() {
-        return Retry.backoff(properties.retryMaxAttempts(), properties.retryMinBackOff())
-                .scheduler(Schedulers.boundedElastic())
-                .doAfterRetry(retrySignal -> LOGGER.warn("Retry attempt {}/{} failed",
-                        retrySignal.totalRetries() + 1,
-                        properties.retryMaxAttempts()))
-                .onRetryExhaustedThrow((_retryBackoffSpec, retrySignal) -> {
-                    throw new AppException(STR.
-                            """
-                            Failed to retrieve entry after \{retrySignal.totalRetries()} retries.
-                            The operation may be experiencing issues or the service is unavailable.
-                            """
-                    );
-                });
     }
 }
